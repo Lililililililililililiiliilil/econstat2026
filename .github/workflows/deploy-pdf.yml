@@ -1,0 +1,60 @@
+# Имя нашего рабочего процесса
+name: Compile LaTeX and Deploy to Pages
+
+# Указываем, когда запускать этот процесс
+on:
+  # При каждом "push" (отправке изменений) в ветку 'main'
+  push:
+    branches: ["main"]
+  # Даём также возможность запустить его вручную из интерфейса GitHub
+  workflow_dispatch:
+
+# Настраиваем права доступа и параметры для предотвращения конфликтов
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+# Список задач (jobs), которые нужно выполнить
+jobs:
+  # Задача 1: Собрать PDF-файл
+  build-pdf:
+    runs-on: ubuntu-latest # Используем среду Ubuntu
+    steps:
+      # 1. Загружаем весь код из нашего репозитория
+      - uses: actions/checkout@v4
+      
+      # 2. Компилируем LaTeX-файл в PDF
+      - name: Compile LaTeX document
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: Справочные файлы для контрольной.tex  # <--- Укажите ИМЯ ВАШЕГО .tex файла
+      
+      # 3. Создаём папку 'public' и перемещаем туда готовый PDF
+      - name: Move PDF to public directory
+        run: |
+          mkdir -p public
+          mv main.pdf public/
+      
+      # 4. Загружаем содержимое папки 'public' как артефакт для следующей задачи
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public/
+
+  # Задача 2: Разместить PDF на GitHub Pages
+  deploy-pdf:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build-pdf # Эта задача запустится только после успешной сборки
+    steps:
+      # 5. Разворачиваем артефакт на GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -32,7 +32,7 @@ jobs:
       - name: Compile LaTeX document
         uses: xu-cheng/latex-action@v4
         with:
-          root_file: Справочные файлы для контрольной.tex  # <--- Укажите ИМЯ ВАШЕГО .tex файла
+          root_file: econstat2026midterm.tex  # <--- Укажите ИМЯ ВАШЕГО .tex файла
       
       # 3. Создаём папку 'public' и перемещаем туда готовый PDF
       - name: Move PDF to public directory
